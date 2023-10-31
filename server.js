@@ -1,11 +1,21 @@
-const http = require("http");
-const app = require("./app");
-require("dotenv").config();
+import cors from 'cors';
+import 'dotenv/config';
+import express from 'express';
+import initRoutes from './src/routes/index.js';
 
-const PORT = process.env.PORT || process.env.API_PORT;
+/** Init app with base config */
+const app = express();
+const PORT = process.env.PORT || 8080;
 
-const server = http.createServer(app);
+/** app.use(middleware) */
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-server.listen(PORT, () => {
-    console.log(`Server is listinging on ${PORT}`);
+/** Routes */
+initRoutes(app);
+
+/** Run */
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
