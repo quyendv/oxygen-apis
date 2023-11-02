@@ -1,16 +1,8 @@
 // const apis = require("../src/helpers/apis");
-import apis from '../helpers/apis.js';
+import factory from './weather.factory.js';
 
-async function current(req, res, next) {
-  const BASE_URL = process.env.WEATHERAPI_BASE_URL;
-  const API_KEY = process.env.WEATHERAPI_API_KEY;
-  const lat = req.body.lat;
-  const lon = req.body.lon;
-
-  let result = await apis('GET', `${BASE_URL}/current.json?key=${API_KEY}&q=${lat},${lon}&aqi=no`);
-  res.json({
-    result,
-  });
-}
-
-export default { current };
+const current = factory('current.json', { aqi: 'yes' });
+const forecast24h = factory('forecast.json', { aqi: 'yes', days: '1', alerts: 'yes' });
+const forecast7d = factory('forecast.json', { aqi: 'yes', days: '7', alerts: 'yes' });
+const forecast10d = factory('forecast.json', { aqi: 'yes', days: '10', alerts: 'yes' });
+export default { current, forecast24h, forecast7d, forecast10d };
