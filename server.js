@@ -1,6 +1,8 @@
 import cors from 'cors';
 import 'dotenv/config';
 import express from 'express';
+import * as admin from 'firebase-admin';
+import serviceAccount from './firebase-admin-key.json';
 import { connectDB } from './src/configs/database.config.js';
 import initRoutes from './src/routes/index.js';
 
@@ -9,6 +11,10 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 connectDB();
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 /** app.use(middleware) */
 app.use(cors());
