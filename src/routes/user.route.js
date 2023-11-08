@@ -4,9 +4,9 @@ import { verifyToken } from '../middlewares/verifyToken.middleware.js';
 
 const userRouter = Router();
 
-userRouter.post('/', userController.createUser);
-userRouter.get('/', verifyToken, (req, res, next) => {
-  res.status(200).json({ success: true });
-});
+userRouter.put('/diseases', verifyToken, userController.setDiseases);
+// userRouter.post('/', userController.createUser);
+userRouter.put('/', verifyToken, userController.updateUser);
+userRouter.get('/', verifyToken, userController.getOwnInfo);
 
 export default userRouter;

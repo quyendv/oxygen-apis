@@ -18,12 +18,12 @@ export async function verifyToken(req, res, next) {
     const { email, uid, /* picture, */ name } = decodedToken;
 
     // Link user from firebase to database
-    const [user /* isNew */] = await db.User.findOrCreate({
-      where: { email, uid },
-      default: { name: name ?? email.split('@')[0] },
+    const [user] = await db.User.findOrCreate({
+      where: { email },
+      default: { name: name ?? email.split('@')[0], uid },
     });
 
-    req.user = user; // { email, uid, picture, name }
+    req.user = user;
 
     next();
   } catch (error) {
