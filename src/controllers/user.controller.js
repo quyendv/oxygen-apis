@@ -26,6 +26,10 @@ async function updateUser(req, res) {
       .pattern(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/)
       .message('"profile.dateOfBirth" require "yyyy-mm-dd" format')
       .optional(),
+    country: Joi.string().optional(),
+    province: Joi.string().optional(),
+    district: Joi.string().optional(),
+    ward: Joi.string().optional(),
     address: Joi.string().optional(),
     height: Joi.number().max(10).message('"profile.height" must be a number (meters)').optional(), // m
     weight: Joi.number().optional(), // kg

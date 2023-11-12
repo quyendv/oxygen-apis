@@ -17,6 +17,10 @@ module.exports = (sequelize, DataTypes) => {
       userId: DataTypes.INTEGER,
       sex: DataTypes.BOOLEAN,
       dateOfBirth: DataTypes.DATEONLY,
+      country: DataTypes.STRING,
+      province: DataTypes.STRING,
+      district: DataTypes.STRING,
+      ward: DataTypes.STRING,
       address: DataTypes.STRING,
       height: DataTypes.DOUBLE, // m
       weight: DataTypes.DOUBLE, // kg
