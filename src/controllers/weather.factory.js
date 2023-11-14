@@ -9,13 +9,19 @@ const factory = (url, options) =>
       optionsStr += `&${key}=${value}`;
     }
 
-    const lat = req.body.lat;
-    const lon = req.body.lon;
+    // const lat = req.body.lat;
+    // const lon = req.body.lon;
+
+    const lat = req.query.lat;
+    const lon = req.query.lon;
+    console.log(lat);
+    console.log(lon);
     const result = await apis(
       'GET',
       `${BASE_URL}/${url}?q=${lat},${lon}&key=${API_KEY}${optionsStr}`,
     );
     return res.json({
+      status: 'success',
       result,
     });
   };

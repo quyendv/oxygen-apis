@@ -14,7 +14,7 @@ async function get() {
         const imgSrc = $(el).find('img').attr('src');
         const url = `https://tuoitre.vn${$(el).find('a').attr('href')}`;
 
-        const content = $(el).find('.box-category-content');
+        
         const title = $(el).find('h3 > a').text();
         const preViewText = $(el).find('p').text();
         const articleObj = {
@@ -33,7 +33,6 @@ async function get() {
       fs.writeFile('data.txt', JSON.stringify(arr), (err) => {
         console.log(err);
       });
-      console.log(arr[0]);
       return;
     }
     const res = await fetch(arr[index].url);
