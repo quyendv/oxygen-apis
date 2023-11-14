@@ -60,15 +60,23 @@ async function updateUser(req, res) {
     }
 
     if (profile) {
-      const [updatedCount] = await db.Profile.update(
-        { ...profile },
-        { where: { userId: userPayload.id } },
-      );
-      if (!updatedCount)
-        return responseHandler.badRequest(
-          res,
-          `Update profile's user "${userPayload.email}" failed`,
+      const existingProfile = await db.Profile.findOne({ where: { userId: userPayload.id } });
+      if (!existingProfile) {
+        await db.Profile.create({
+          ...profile,
+          userId: userPayload.id,
+        });
+      } else {
+        const [updatedCount] = await db.Profile.update(
+          { ...profile },
+          { where: { userId: userPayload.id } },
         );
+        if (!updatedCount)
+          return responseHandler.badRequest(
+            res,
+            `Update profile's user "${userPayload.email}" failed`,
+          );
+      }
     }
 
     return responseHandler.created(res, 'Update user successfully');
