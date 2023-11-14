@@ -1,3 +1,5 @@
+import articleRouter from './article.route.js';
+import geocodeRouter from './geocode.route.js';
 import userRouter from './user.route.js';
 import weatherRouter from './weather.route.js';
 
@@ -5,7 +7,8 @@ const initRoutes = (app) => {
   // app.use(path, otherRouter)
   app.use('/api/v1/weather/', weatherRouter);
   app.use('/api/v1/users/', userRouter);
-
+  app.use('/api/v1/article', articleRouter);
+  app.use('/api/v1/geocode', geocodeRouter);
   app.use('/', (req, res) => {
     res.send('Server on root route. Path not found!');
   });
