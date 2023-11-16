@@ -1,11 +1,12 @@
 import cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import fs from 'fs';
+import apisCall from "./apis";
 
-async function get() {
+async function getArticle(urlArticle) {
   async function fetchTitle() {
     var array = [];
-    const res = await fetch(`https://tuoitre.vn/chat-luong-khong-khi.html`);
+    const res = await fetch(urlArticle);
     if (res.status == 200) {
       const html = await res.text();
       const $ = cheerio.load(html);
@@ -30,11 +31,12 @@ async function get() {
   }
   async function fetchContent(arr, index) {
     if (index == arr.length) {
-      fs.writeFile('data.txt', JSON.stringify(arr), (err) => {
-        console.log(err);
-      });
+      // fs.writeFile('data.txt', JSON.stringify(arr), (err) => {
+      //   console.log(err);
+      // });
       return;
     }
+
     const res = await fetch(arr[index].url);
     const arrayContent = [];
     if (res.status == 200) {
@@ -79,6 +81,17 @@ async function get() {
   var arr = await fetchTitle();
 
   await fetchContent(arr, 0);
+  return arr;
 }
 
-get();
+
+
+if(process.argv[2] == '--article') {
+  getArticle(`https://tuoitre.vn/chat-luong-khong-khi.html`)
+} else if(process.argv[2] == '--aqi') {
+  // getAqi()
+}
+
+
+
+export default {getArticle}

@@ -1,6 +1,7 @@
 import httpRequest from 'request-promise';
 
 const callApi = async function (METHOD, URL, BODY = null, HEADERS = null) {
+  console.log(URL);
   let headers = {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache',
@@ -25,6 +26,7 @@ const callApi = async function (METHOD, URL, BODY = null, HEADERS = null) {
       console.log(`HELPER API: ${URL} ERROR =`, err.message);
       return err;
     });
+
   return response;
 };
 
