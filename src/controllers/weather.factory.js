@@ -14,12 +14,32 @@ const factory = (url, options) =>
 
     const lat = req.query.lat;
     const lon = req.query.lon;
-    console.log(lat);
-    console.log(lon);
-    const result = await apis(
+    let result = await apis(
       'GET',
       `${BASE_URL}/${url}?q=${lat},${lon}&key=${API_KEY}${optionsStr}`,
     );
+
+    if (url == 'current.json') {
+      try {
+        const res = await apis(
+          'GET',
+          `${process.env.AIR_VISUAL_BASE_URL}/nearest_city?lat=
+        ${lat}&lon=${lon}&key=${process.env.AIR_VISUAL_API_KEY}`,
+        );
+        if (res.status == 'success') {
+          const aqi = res.data.current.pollution.aqius;
+          result = {
+            ...result,
+            current: {
+              ...result.current,
+              aqius: aqi,
+            },
+          };
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
     return res.json({
       status: 'success',
       result,
