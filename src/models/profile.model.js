@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       province: DataTypes.STRING,
       district: DataTypes.STRING,
       ward: DataTypes.STRING,
-      address: DataTypes.STRING,
+      address: DataTypes.STRING, // home,street,...
       height: DataTypes.DOUBLE, // m
       weight: DataTypes.DOUBLE, // kg
     },
