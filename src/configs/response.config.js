@@ -35,19 +35,9 @@ const responseHandler = {
     });
   },
 
-  ok: (res, msg, data) =>
-    responseWithData(res, 200, {
-      success: true,
-      message: msg,
-      data,
-    }),
+  ok: (res, msg, data) => responseWithData(res, 200, data),
 
-  created: (res, msg, data) =>
-    responseWithData(res, 201, {
-      success: true,
-      message: msg,
-      data,
-    }),
+  created: (res, msg, data) => responseWithData(res, 201, data),
 };
 
 export default responseHandler;

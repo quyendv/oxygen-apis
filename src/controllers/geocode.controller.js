@@ -12,10 +12,7 @@ async function reverseGeocode(req, res, next) {
     `${BASE_URL}/reverse?lat=${lat}&lon=${lon}&apiKey=${API_KEY}`,
   );
 
-  return res.json({
-    status: 'success',
-    result,
-  });
+  return res.status(200).json(result.features[0].properties);
 }
 async function getRelatedLocation(req, res, next) {
   const text = req.query.text;
@@ -28,9 +25,6 @@ async function getRelatedLocation(req, res, next) {
     encodeURI(`${BASE_URL}/autocomplete?text=${text}&apiKey=${API_KEY}`),
   );
 
-  return res.json({
-    status: 'success',
-    result,
-  });
+  return res.status(200).json(result.features[0].properties);
 }
 export default { reverseGeocode, getRelatedLocation };
