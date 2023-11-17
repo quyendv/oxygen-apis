@@ -82,13 +82,28 @@ async function current(req, res, next) {
     );
     if (response.status == 'success') {
       const aqi = response.data.current.pollution.aqius;
-      return res.status(200).json({
-        ...result.current,
+
+      const finalResult = {
+        time: result.current.last_updated_epoch,
+        temp_c: result.current.temp_c,
+        temp_f: result.current.temp_f,
+        condition: result.current.condition,
+        wind_mph: result.current.wind_mph,
+        wind_kph: result.current.wind_kph,
+        wind_degree: result.current.wind_degree,
+        wind_dir: result.current.wind_dir,
+        humidity: result.current.humidity,
         air_quality: {
-          ...result.current.air_quality,
-          aqius: aqi,
+          co: result.current.air_quality.co,
+          no2: result.current.air_quality.no2,
+          o3: result.current.air_quality.o3,
+          so2: result.current.air_quality.so2,
+          pm2_5: result.current.air_quality.pm2_5,
+          pm10: result.current.air_quality.pm10,
+          aqi,
         },
-      });
+      };
+      return res.status(200).json(finalResult);
     }
   } catch (error) {
     console.log(error);
@@ -120,11 +135,33 @@ async function forecast24h(req, res, next) {
     const aqiResult = await forecast24hAqi(lat, lon);
     const finalResult = [];
     for (var i = 0; i < 24; i++) {
-      finalResult.push({
+      var temp = {
         ...weatherResult[0][i],
         air_quality: aqiResult[i],
+      };
+
+      finalResult.push({
+        time: temp.time_epoch,
+        temp_c: temp.temp_c,
+        temp_f: temp.temp_f,
+        condition: temp.condition,
+        wind_mph: temp.wind_mph,
+        wind_kph: temp.wind_kph,
+        wind_degree: temp.wind_degree,
+        wind_dir: temp.wind_dir,
+        humidity: temp.humidity,
+        air_quality: {
+          co: temp.air_quality.co,
+          no2: temp.air_quality.no2,
+          o3: temp.air_quality.o3,
+          so2: temp.air_quality.so2,
+          pm2_5: temp.air_quality.pm25,
+          pm10: temp.air_quality.pm10,
+          aqi: temp.air_quality.aqi,
+        },
       });
     }
+
     return res.status(200).json(finalResult);
   } catch (error) {
     console.log(error);
@@ -185,18 +222,30 @@ async function forecast7d(req, res, next) {
     );
 
     const aqi = await get7dAqi(lat, lon);
-    console.log(aqi);
     const finalResult = result.forecast.forecastday.map((el, i) => {
       const aqius = aqi[el.date_epoch];
       return {
-        date: el.date,
-        date_epoch: el.date_epoch,
-        day: {
-          ...el.day,
-          air_quality: {
-            ...el.day.air_quality,
-            aqius,
-          },
+        time: el.date_epoch,
+        maxtemp_c: el.day.maxtemp_c,
+        maxtemp_f: el.day.maxtemp_f,
+        mintemp_c: el.day.mintemp_c,
+        mintemp_f: el.day.mintemp_f,
+        wind_mph: el.day.maxwind_mph,
+        wind_kph: el.day.maxwind_kph,
+        temp_c: el.day.avgtemp_c,
+        temp_f: el.day.avgtemp_f,
+        humidity: el.day.avghumidity,
+        condition: el.day.condition,
+        wind_degree: el.day.avgwind_degree,
+        wind_dir: el.day.avgwind_dir,
+        air_quality: {
+          co: el.day.air_quality.co,
+          no2: el.day.air_quality.no2,
+          o3: el.day.air_quality.o3,
+          so2: el.day.air_quality.so2,
+          pm2_5: el.day.air_quality.pm2_5,
+          pm10: el.day.air_quality.pm10,
+          aqi: aqius,
         },
       };
     });

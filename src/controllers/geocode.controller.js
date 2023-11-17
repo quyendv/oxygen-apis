@@ -24,7 +24,9 @@ async function getRelatedLocation(req, res, next) {
     'GET',
     encodeURI(`${BASE_URL}/autocomplete?text=${text}&apiKey=${API_KEY}`),
   );
-
-  return res.status(200).json(result.features[0].properties);
+  const finalResult = result.features.map((el, i) => {
+    return el.properties;
+  });
+  return res.status(200).json(finalResult);
 }
 export default { reverseGeocode, getRelatedLocation };
