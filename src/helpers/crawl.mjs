@@ -1,7 +1,6 @@
 import cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import fs from 'fs';
-import apisCall from "./apis";
 
 async function getArticle(urlArticle) {
   async function fetchTitle() {
@@ -29,65 +28,20 @@ async function getArticle(urlArticle) {
     }
     return array;
   }
-  async function fetchContent(arr, index) {
-    if (index == arr.length) {
-      // fs.writeFile('data.txt', JSON.stringify(arr), (err) => {
-      //   console.log(err);
-      // });
-      return;
-    }
-
-    const res = await fetch(arr[index].url);
-    const arrayContent = [];
-    if (res.status == 200) {
-      const html = await res.text();
-      const $ = cheerio.load(html);
-      const content = $('.detail-content');
-      content.children().each((index, el) => {
-        if ($(el).get(0).tagName == 'figure') {
-          const imgSrc = $(el).find('img').attr('src');
-          const caption = $(el).find('p').text();
-          arrayContent.push({
-            figure: {
-              imgSrc,
-              caption,
-            },
-          });
-        }
-        if ($(el).get(0).tagName == 'h3') {
-          const title = $(el).text();
-          arrayContent.push({
-            heading: {
-              heading: title,
-            },
-          });
-        }
-
-        if ($(el).get(0).tagName == 'p') {
-          const paragraphContent = $(el).text();
-          arrayContent.push({
-            paragraph: paragraphContent,
-          });
-        }
-      });
-      arr[index] = {
-        ...arr[index],
-        arrayContent,
-      };
-    }
-    fetchContent(arr, ++index);
-  }
+  
 
   var arr = await fetchTitle();
-
-  await fetchContent(arr, 0);
   return arr;
 }
 
 
-
 if(process.argv[2] == '--article') {
-  getArticle(`https://tuoitre.vn/chat-luong-khong-khi.html`)
+  // var arr = await getArticle(`https://tuoitre.vn/chat-luong-khong-khi.html`);
+  
+  // fs.writeFileSync('data.txt', JSON.stringify(arr), (err) => {
+  //   console.log(err)
+  // });
+
 } else if(process.argv[2] == '--aqi') {
   // getAqi()
 }
