@@ -12,7 +12,7 @@ import db from '../models';
 //     });
 //     // if (!isNew) console.log('Already created');
 
-//     return responseHandler.created(res, 'Create user successfully', { user });
+//     return responseHandler.created(res, user);
 //   } catch (error) {
 //     return responseHandler.internalServerError(res);
 //   }
@@ -79,7 +79,15 @@ async function updateUser(req, res) {
       }
     }
 
-    return responseHandler.created(res, 'Update user successfully');
+    const newData = await db.User.findOne({
+      where: { id: userPayload.id },
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
+      include: [
+        { model: db.Profile, attributes: { exclude: ['createdAt', 'updatedAt'] }, as: 'profile' },
+      ],
+    });
+
+    return responseHandler.created(res, newData);
   } catch (error) {
     return responseHandler.internalServerError(res, error.message);
   }
@@ -95,7 +103,7 @@ async function getOwnInfo(req, res) {
         { model: db.Profile, attributes: { exclude: ['createdAt', 'updatedAt'] }, as: 'profile' },
       ],
     });
-    return responseHandler.ok(res, 'Get user info successfully', response);
+    return responseHandler.ok(res, response);
   } catch (error) {
     return responseHandler.internalServerError(res, error.message);
   }
@@ -126,7 +134,8 @@ async function setDiseases(req, res) {
       await db.Disease.bulkCreate(toAdd.map((name) => ({ name, userId: user.id })));
     }
 
-    return responseHandler.created(res, 'Set diseases successfully');
+    const newData = await db.Disease.findAll({ userId: user.id });
+    return responseHandler.created(res, newData);
   } catch (error) {
     return responseHandler.internalServerError(res, error.message);
   }

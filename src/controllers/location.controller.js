@@ -19,7 +19,7 @@ async function getLocationHistory(req, res) {
       where: { userId, timestamp: { [Op.between]: [from, to] } },
       order: [['timestamp', 'ASC']],
     });
-    return responseHandler.ok(res, 'Get location history successfully.', locations);
+    return responseHandler.ok(res, locations);
   } catch (error) {
     return responseHandler.internalServerError(res, error.message);
   }
@@ -46,7 +46,7 @@ async function addLocationHistory(req, res) {
       ...req.body,
       timestamp: new Date(req.body.timestamp),
     });
-    return responseHandler.created(res, 'Add location history successfully.', location);
+    return responseHandler.created(res, location);
   } catch (error) {
     return responseHandler.internalServerError(res, error.message);
   }
