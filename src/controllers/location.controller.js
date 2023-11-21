@@ -1,8 +1,8 @@
 import Joi from 'joi';
-import { Op } from 'sequelize';
 import responseHandler from '../configs/response.config';
-import { getTimeRangeByDate } from '../helpers/common.helper';
+import { getTimeRange, getTimeRangeByDate } from '../helpers/common.helper';
 import db from '../models';
+import * as locationService from '../services/location.service';
 
 async function getLocationHistory(req, res) {
   const dateQueryDto = Joi.date().iso().required();
@@ -12,14 +12,27 @@ async function getLocationHistory(req, res) {
   try {
     const { id: userId } = req.user;
     const { date } = req.query;
-
     const [from, to] = getTimeRangeByDate(date);
 
-    const locations = await db.LocationHistory.findAll({
-      where: { userId, timestamp: { [Op.between]: [from, to] } },
-      order: [['timestamp', 'ASC']],
-    });
-    return responseHandler.ok(res, locations);
+    return locationService.getLocationHistoryByTimeRange(res, userId, from, to);
+  } catch (error) {
+    return responseHandler.internalServerError(res, error.message);
+  }
+}
+
+async function getLocationHistoryToday(req, res) {
+  try {
+    const [from, to] = getTimeRangeByDate();
+    return locationService.getLocationHistoryByTimeRange(res, req.user.id, from, to);
+  } catch (error) {
+    return responseHandler.internalServerError(res, error.message);
+  }
+}
+
+async function getLocationHistoryLast7Days(req, res) {
+  try {
+    const [from, to] = getTimeRange();
+    return locationService.getLocationHistoryByTimeRange(res, req.user.id, from, to);
   } catch (error) {
     return responseHandler.internalServerError(res, error.message);
   }
@@ -52,4 +65,9 @@ async function addLocationHistory(req, res) {
   }
 }
 
-export default { getLocationHistory, addLocationHistory };
+export default {
+  getLocationHistory,
+  addLocationHistory,
+  getLocationHistoryToday,
+  getLocationHistoryLast7Days,
+};
