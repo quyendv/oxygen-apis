@@ -93,6 +93,8 @@ async function current(req, res, next) {
         wind_degree: result.current.wind_degree,
         wind_dir: result.current.wind_dir,
         humidity: result.current.humidity,
+        precip_in: result.current.precip_in,
+        precip_mm: result.current.precip_mm,
         air_quality: {
           co: result.current.air_quality.co,
           no2: result.current.air_quality.no2,
@@ -150,6 +152,9 @@ async function forecast24h(req, res, next) {
         wind_degree: temp.wind_degree,
         wind_dir: temp.wind_dir,
         humidity: temp.humidity,
+        precip_in: temp.precip_in,
+        precip_mm: temp.precip_mm,
+        chance_of_rain: temp.chance_of_rain,
         air_quality: {
           co: temp.air_quality.co,
           no2: temp.air_quality.no2,
@@ -238,6 +243,9 @@ async function forecast7d(req, res, next) {
         condition: el.day.condition,
         wind_degree: el.day.avgwind_degree,
         wind_dir: el.day.avgwind_dir,
+        precip_in: el.day.totalprecip_in,
+        precip_mm: el.day.totalprecip_mm,
+        chance_of_rain: el.day.daily_chance_of_rain,
         air_quality: {
           co: el.day.air_quality.co,
           no2: el.day.air_quality.no2,
