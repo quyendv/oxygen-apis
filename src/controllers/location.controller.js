@@ -14,7 +14,8 @@ async function getLocationHistory(req, res) {
     const { date } = req.query;
     const [from, to] = getTimeRangeByDate(date);
 
-    return locationService.getLocationHistoryByTimeRange(res, userId, from, to);
+    const locations = await locationService.getLocationHistoryByTimeRange(userId, from, to);
+    return responseHandler.ok(res, locations);
   } catch (error) {
     return responseHandler.internalServerError(res, error.message);
   }
@@ -23,7 +24,14 @@ async function getLocationHistory(req, res) {
 async function getLocationHistoryToday(req, res) {
   try {
     const [from, to] = getTimeRangeByDate();
-    return locationService.getLocationHistoryByTimeRange(res, req.user.id, from, to);
+    const locations = await locationService.getLocationHistoryByTimeRange(req.user.id, from, to);
+    const formattedLocations = locations.map((item) => ({
+      ...item.toJSON(),
+      time: item.epoch,
+      epoch: undefined,
+      timestamp: undefined,
+    }));
+    return responseHandler.ok(res, formattedLocations);
   } catch (error) {
     return responseHandler.internalServerError(res, error.message);
   }
@@ -32,7 +40,30 @@ async function getLocationHistoryToday(req, res) {
 async function getLocationHistoryLast7Days(req, res) {
   try {
     const [from, to] = getTimeRange();
-    return locationService.getLocationHistoryByTimeRange(res, req.user.id, from, to);
+    const locations = await locationService.getLocationHistoryByTimeRange(req.user.id, from, to);
+
+    /** Record<dateStr, FormattedLocationEntity[], (FormattedLocationEntity rename prop "epoch" to "time", and remove "timestamp" prop) */
+    const filteredByDate = locations.reduce((acc, cur) => {
+      const vnDate = new Date(cur.timestamp); // UTC
+      vnDate.setTime(vnDate.getTime() + 7 * 60 * 60 * 1000);
+
+      const vnISO = vnDate.toISOString().slice(0, 10);
+      if (!acc[vnISO]) acc[vnISO] = [];
+
+      const jsonCur = cur.toJSON(); // get JSON data from entity db
+      acc[vnISO].push({ ...jsonCur, time: jsonCur.epoch, epoch: undefined, timestamp: undefined });
+
+      return acc;
+    }, {});
+
+    /** Array<{ time: startDayEpoch, history: FormattedLocationEntity[] }> */
+    const result = Object.keys(filteredByDate).map((dateStr) => {
+      return {
+        time: Math.ceil(new Date(dateStr).getTime() / 1000),
+        history: filteredByDate[dateStr],
+      };
+    });
+    return responseHandler.ok(res, result);
   } catch (error) {
     return responseHandler.internalServerError(res, error.message);
   }
@@ -42,11 +73,8 @@ async function addLocationHistory(req, res) {
   const dto = Joi.object({
     lat: Joi.number().required(),
     long: Joi.number().required(),
-    aqi: Joi.number().required(),
-    timestamp: Joi.string()
-      .pattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/)
-      .message('"timestamp" require iso format, eg: "2023-12-21T00:00:00Z"')
-      .required(),
+    aqi: Joi.number().integer().required(),
+    time: Joi.number().integer().min(0).required(),
   }).required();
   const { error } = dto.validate(req.body);
   if (error) return responseHandler.badRequest(res, error.details[0]?.message);
@@ -57,7 +85,8 @@ async function addLocationHistory(req, res) {
     const location = await db.LocationHistory.create({
       userId,
       ...req.body,
-      timestamp: new Date(req.body.timestamp),
+      epoch: req.body.time,
+      timestamp: new Date(req.body.time * 1000),
     });
     return responseHandler.created(res, location);
   } catch (error) {
