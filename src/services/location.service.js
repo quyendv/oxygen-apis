@@ -1,11 +1,11 @@
 import { Op } from 'sequelize';
-import responseHandler from '../configs/response.config';
 import db from '../models';
 
-export async function getLocationHistoryByTimeRange(res, userId, from, to) {
+export async function getLocationHistoryByTimeRange(userId, from, to) {
   const locations = await db.LocationHistory.findAll({
     where: { userId, timestamp: { [Op.between]: [from, to] } },
     order: [['timestamp', 'ASC']],
+    attributes: { exclude: ['createdAt', 'updatedAt'] },
   });
-  return responseHandler.ok(res, locations);
+  return locations;
 }

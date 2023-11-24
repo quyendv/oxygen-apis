@@ -20,8 +20,9 @@ module.exports = (sequelize, DataTypes) => {
     {
       lat: DataTypes.DOUBLE,
       long: DataTypes.DOUBLE,
-      aqi: DataTypes.DOUBLE,
+      aqi: DataTypes.INTEGER,
       timestamp: DataTypes.DATE,
+      epoch: DataTypes.INTEGER,
       userId: DataTypes.INTEGER,
     },
     {
