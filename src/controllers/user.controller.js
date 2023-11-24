@@ -2,37 +2,34 @@ import Joi from 'joi';
 import responseHandler from '../configs/response.config';
 import db from '../models';
 
-// async function createUser(req, res) {
-//   try {
-//     const data = { email: 'quyendv@example.com', uid: '123', name: 'quyen' }; // req.body
+async function createUser(req, res) {
+  try {
+    const { name, email, picture } = req.user;
 
-//     const [user, isNew] = await db.User.findOrCreate({
-//       where: { email: data.email },
-//       default: { name: data.name, uid: data.uid },
-//     });
-//     // if (!isNew) console.log('Already created');
+    const [user, isNew] = await db.User.findOrCreate({
+      where: { email },
+      defaults: { name: name ?? email.split('@')[0], avatar: picture },
+      attributes: { exclude: ['createdAt', 'updatedAt', 'avatarKey'] },
+    });
 
-//     return responseHandler.created(res, user);
-//   } catch (error) {
-//     return responseHandler.internalServerError(res);
-//   }
-// }
+    return responseHandler.created(res, user);
+  } catch (error) {
+    return responseHandler.internalServerError(res);
+  }
+}
 
 async function updateUser(req, res) {
   const nameDto = Joi.string().optional();
   const profileDto = Joi.object({
     sex: Joi.bool().optional(),
-    dateOfBirth: Joi.string()
-      .pattern(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/)
-      .message('"profile.dateOfBirth" require "yyyy-mm-dd" format')
-      .optional(),
+    dateOfBirth: Joi.number().integer().optional(),
     country: Joi.string().optional(),
     province: Joi.string().optional(),
     district: Joi.string().optional(),
     ward: Joi.string().optional(),
     address: Joi.string().optional(),
     height: Joi.number().max(10).message('"profile.height" must be a number (meters)').optional(), // m
-    weight: Joi.number().optional(), // kg
+    weight: Joi.number().min(0).optional(), // kg
   });
 
   const { error } = Joi.object({ name: nameDto, profile: profileDto })
@@ -41,16 +38,14 @@ async function updateUser(req, res) {
   if (error) return responseHandler.badRequest(res, error.details[0]?.message);
 
   try {
-    const userPayload = req.user;
+    const { email } = req.user;
     const { name, profile } = req.body;
 
-    // NOTE: User existence is already checked at the verifyToken middleware.
+    const existingUser = await db.User.findOne({ where: { email } });
+    if (!existingUser) return responseHandler.notFound(res, `User "${email}" has not logged in.`);
 
     if (name) {
-      const [updatedCount] = await db.User.update(
-        { name },
-        { where: { email: userPayload.email } },
-      );
+      const [updatedCount] = await db.User.update({ name }, { where: { email } });
       if (!updatedCount) {
         return responseHandler.badRequest(
           res,
@@ -60,28 +55,22 @@ async function updateUser(req, res) {
     }
 
     if (profile) {
-      const existingProfile = await db.Profile.findOne({ where: { userId: userPayload.id } });
+      const existingProfile = await db.Profile.findOne({ where: { userId: existingUser.id } });
       if (!existingProfile) {
-        await db.Profile.create({
-          ...profile,
-          userId: userPayload.id,
-        });
+        await db.Profile.create({ ...profile, userId: existingUser.id });
       } else {
         const [updatedCount] = await db.Profile.update(
           { ...profile },
-          { where: { userId: userPayload.id } },
+          { where: { userId: existingUser.id } },
         );
         if (!updatedCount)
-          return responseHandler.badRequest(
-            res,
-            `Update profile's user "${userPayload.email}" failed`,
-          );
+          return responseHandler.badRequest(res, `Update profile's user "${email}" failed`);
       }
     }
 
     const newData = await db.User.findOne({
-      where: { id: userPayload.id },
-      attributes: { exclude: ['createdAt', 'updatedAt'] },
+      where: { id: existingUser.id },
+      attributes: { exclude: ['createdAt', 'updatedAt', 'avatarKey'] },
       include: [
         { model: db.Profile, attributes: { exclude: ['createdAt', 'updatedAt'] }, as: 'profile' },
       ],
@@ -95,14 +84,16 @@ async function updateUser(req, res) {
 
 async function getOwnInfo(req, res) {
   try {
+    const { email } = req.user;
     const response = await db.User.findOne({
-      where: { id: req.user.id },
-      attributes: { exclude: ['createdAt', 'updatedAt'] },
+      where: { email },
+      attributes: { exclude: ['createdAt', 'updatedAt', 'avatarKey'] },
       include: [
         { model: db.Disease, attributes: ['id', 'name'], as: 'diseases' },
         { model: db.Profile, attributes: { exclude: ['createdAt', 'updatedAt'] }, as: 'profile' },
       ],
     });
+    if (!response) return responseHandler.notFound(res, `User "${email}" has not logged in.`);
     return responseHandler.ok(res, response);
   } catch (error) {
     return responseHandler.internalServerError(res, error.message);
@@ -141,4 +132,4 @@ async function setDiseases(req, res) {
   }
 }
 
-export default { updateUser, setDiseases, getOwnInfo };
+export default { createUser, updateUser, setDiseases, getOwnInfo };

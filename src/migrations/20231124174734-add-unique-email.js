@@ -10,8 +10,10 @@ module.exports = {
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
     return Promise.all([
-      queryInterface.addColumn('LocationHistories', 'epoch', {
-        type: Sequelize.INTEGER,
+      queryInterface.changeColumn('Users', 'email', {
+        type: Sequelize.STRING,
+        unique: true,
+        allowNull: false,
       }),
     ]);
   },
@@ -23,6 +25,10 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    return Promise.all([queryInterface.removeColumn('LocationHistories', 'epoch')]);
+    return Promise.all([
+      queryInterface.changeColumn('Users', 'email', {
+        type: Sequelize.STRING,
+      }),
+    ]);
   },
 };

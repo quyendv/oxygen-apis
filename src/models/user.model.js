@@ -18,7 +18,9 @@ module.exports = (sequelize, DataTypes) => {
     {
       email: DataTypes.STRING,
       name: DataTypes.STRING,
-      uid: DataTypes.STRING, // firebase
+      // uid: DataTypes.STRING, // firebase
+      avatar: DataTypes.STRING,
+      avatarKey: DataTypes.STRING,
     },
     {
       sequelize,
