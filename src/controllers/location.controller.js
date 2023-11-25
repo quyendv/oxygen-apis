@@ -4,17 +4,24 @@ import { getTimeRange, getTimeRangeByDate } from '../helpers/common.helper';
 import db from '../models';
 import * as locationService from '../services/location.service';
 
-async function getLocationHistory(req, res) {
+async function getLocationHistoryByDate(req, res) {
   const dateQueryDto = Joi.date().iso().required();
   const { error } = Joi.object({ date: dateQueryDto }).validate(req.query);
   if (error) return responseHandler.badRequest(res, error.details[0]?.message);
 
   try {
-    const { id: userId } = req.user;
+    const { email } = req.user;
+    const existingUser = await db.User.findOne({ where: { email } });
+    if (!existingUser) return responseHandler.notFound(res, `User "${email}" has not logged in.`);
+
     const { date } = req.query;
     const [from, to] = getTimeRangeByDate(date);
 
-    const locations = await locationService.getLocationHistoryByTimeRange(userId, from, to);
+    const locations = await locationService.getLocationHistoryByTimeRange(
+      existingUser.id,
+      from,
+      to,
+    );
     return responseHandler.ok(res, locations);
   } catch (error) {
     return responseHandler.internalServerError(res, error.message);
@@ -23,8 +30,16 @@ async function getLocationHistory(req, res) {
 
 async function getLocationHistoryToday(req, res) {
   try {
+    const { email } = req.user;
+    const existingUser = await db.User.findOne({ where: { email } });
+    if (!existingUser) return responseHandler.notFound(res, `User "${email}" has not logged in.`);
+
     const [from, to] = getTimeRangeByDate();
-    const locations = await locationService.getLocationHistoryByTimeRange(req.user.id, from, to);
+    const locations = await locationService.getLocationHistoryByTimeRange(
+      existingUser.id,
+      from,
+      to,
+    );
     const formattedLocations = locations.map((item) => ({
       ...item.toJSON(),
       time: item.epoch,
@@ -39,8 +54,16 @@ async function getLocationHistoryToday(req, res) {
 
 async function getLocationHistoryLast7Days(req, res) {
   try {
+    const { email } = req.user;
+    const existingUser = await db.User.findOne({ where: { email } });
+    if (!existingUser) return responseHandler.notFound(res, `User "${email}" has not logged in.`);
+
     const [from, to] = getTimeRange();
-    const locations = await locationService.getLocationHistoryByTimeRange(req.user.id, from, to);
+    const locations = await locationService.getLocationHistoryByTimeRange(
+      existingUser.id,
+      from,
+      to,
+    );
 
     /** Record<dateStr, FormattedLocationEntity[], (FormattedLocationEntity rename prop "epoch" to "time", and remove "timestamp" prop) */
     const filteredByDate = locations.reduce((acc, cur) => {
@@ -81,9 +104,12 @@ async function addLocationHistory(req, res) {
 
   try {
     // TODO: check timestamp < now
-    const { id: userId } = req.user;
+    const { email } = req.user;
+    const existingUser = await db.User.findOne({ where: { email } });
+    if (!existingUser) return responseHandler.notFound(res, `User "${email}" has not logged in.`);
+
     const location = await db.LocationHistory.create({
-      userId,
+      userId: existingUser.id,
       ...req.body,
       epoch: req.body.time,
       timestamp: new Date(req.body.time * 1000),
@@ -95,7 +121,7 @@ async function addLocationHistory(req, res) {
 }
 
 export default {
-  getLocationHistory,
+  getLocationHistoryByDate,
   addLocationHistory,
   getLocationHistoryToday,
   getLocationHistoryLast7Days,
