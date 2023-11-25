@@ -1,6 +1,7 @@
 import Joi from 'joi';
 import responseHandler from '../configs/response.config';
 import db from '../models';
+import storageService from '../services/storage.service';
 
 async function createUser(req, res) {
   try {
@@ -132,4 +133,28 @@ async function setDiseases(req, res) {
   }
 }
 
-export default { createUser, updateUser, setDiseases, getOwnInfo };
+async function setAvatar(req, res) {
+  if (!req.file) return responseHandler.badRequest(res, '"file" is require');
+
+  try {
+    const { email } = req.user;
+    const user = await db.User.findOne({ where: { email } });
+    if (!user) return responseHandler.notFound(res, `User ${email} not found`);
+
+    const { filename, publicUrl } = await storageService.uploadFile(req.file, 'avatars');
+    if (user.avatarKey) {
+      await storageService.deleteFile(user.avatarKey);
+    }
+
+    user.avatar = publicUrl;
+    user.avatarKey = filename;
+    await user.save();
+    await user.reload();
+
+    return responseHandler.ok(res, user);
+  } catch (error) {
+    return responseHandler.internalServerError(res, error.message);
+  }
+}
+
+export default { createUser, updateUser, setDiseases, getOwnInfo, setAvatar };
