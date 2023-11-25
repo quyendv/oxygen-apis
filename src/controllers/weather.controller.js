@@ -1,5 +1,6 @@
 import apis from '../helpers/apis.js';
 import cheerio from 'cheerio';
+import validateLatLong from '../utils/validateLocation.js';
 // const current = factory('current.json', { aqi: 'yes' });
 // const forecast24h = factory('forecast.json', { aqi: 'yes', days: '1', alerts: 'yes' });
 // const forecast7d = factory('forecast.json', { aqi: 'yes', days: '7', alerts: 'yes' });
@@ -70,6 +71,12 @@ async function current(req, res, next) {
   }
   const lat = req.query.lat;
   const lon = req.query.lon;
+
+  if (!validateLatLong(lat, lon)) {
+    return res.status(400).json({
+      message: 'Invalid Location',
+    });
+  }
   try {
     let result = await apis(
       'GET',
@@ -82,12 +89,17 @@ async function current(req, res, next) {
     );
     if (response.status == 'success') {
       const aqi = response.data.current.pollution.aqius;
-
+      const icon = result.current.condition.icon.split('/').slice(-2);
       const finalResult = {
         time: result.current.last_updated_epoch,
         temp_c: result.current.temp_c,
         temp_f: result.current.temp_f,
-        condition: result.current.condition,
+        condition: {
+          ...result.current.condition,
+          icon_type: icon[0],
+          icon_code: icon[1].split('.')[0],
+          icon: 'https:' + result.current.condition.icon,
+        },
         wind_mph: result.current.wind_mph,
         wind_kph: result.current.wind_kph,
         wind_degree: result.current.wind_degree,
@@ -126,6 +138,12 @@ async function forecast24h(req, res, next) {
 
   const lat = req.query.lat;
   const lon = req.query.lon;
+
+  if (!validateLatLong(lat, lon)) {
+    return res.status(400).json({
+      message: 'Invalid Location',
+    });
+  }
   try {
     let result = await apis(
       'GET',
@@ -141,12 +159,18 @@ async function forecast24h(req, res, next) {
         ...weatherResult[0][i],
         air_quality: aqiResult[i],
       };
+      var icon = temp.condition.icon.split('/').slice(-2);
 
       finalResult.push({
         time: temp.time_epoch,
         temp_c: temp.temp_c,
         temp_f: temp.temp_f,
-        condition: temp.condition,
+        condition: {
+          ...temp.condition,
+          icon_type: icon[0],
+          icon_code: icon[1].split('.')[0],
+          icon: 'https:' + temp.condition.icon,
+        },
         wind_mph: temp.wind_mph,
         wind_kph: temp.wind_kph,
         wind_degree: temp.wind_degree,
@@ -220,6 +244,12 @@ async function forecast7d(req, res, next) {
   }
   const lat = req.query.lat;
   const lon = req.query.lon;
+
+  if (!validateLatLong(lat, lon)) {
+    return res.status(400).json({
+      message: 'Invalid Location',
+    });
+  }
   try {
     let result = await apis(
       'GET',
@@ -229,6 +259,7 @@ async function forecast7d(req, res, next) {
     const aqi = await get7dAqi(lat, lon);
     const finalResult = result.forecast.forecastday.map((el, i) => {
       const aqius = aqi[el.date_epoch];
+      const icon = el.day.condition.icon.split('/').slice(-2);
       return {
         time: el.date_epoch,
         maxtemp_c: el.day.maxtemp_c,
@@ -240,19 +271,24 @@ async function forecast7d(req, res, next) {
         temp_c: el.day.avgtemp_c,
         temp_f: el.day.avgtemp_f,
         humidity: el.day.avghumidity,
-        condition: el.day.condition,
+        condition: {
+          ...el.day.condition,
+          icon_type: icon[0],
+          icon_code: icon[1].split('.')[0],
+          icon: 'https:' + el.day.condition.icon,
+        },
         wind_degree: el.day.avgwind_degree,
         wind_dir: el.day.avgwind_dir,
         precip_in: el.day.totalprecip_in,
         precip_mm: el.day.totalprecip_mm,
         chance_of_rain: el.day.daily_chance_of_rain,
         air_quality: {
-          co: el.day.air_quality.co,
-          no2: el.day.air_quality.no2,
-          o3: el.day.air_quality.o3,
-          so2: el.day.air_quality.so2,
-          pm2_5: el.day.air_quality.pm2_5,
-          pm10: el.day.air_quality.pm10,
+          co: el.day.air_quality?.co,
+          no2: el.day.air_quality?.no2,
+          o3: el.day.air_quality?.o3,
+          so2: el.day.air_quality?.so2,
+          pm2_5: el.day.air_quality?.pm2_5,
+          pm10: el.day.air_quality?.pm10,
           aqi: aqius,
         },
       };
