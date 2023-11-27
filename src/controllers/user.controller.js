@@ -103,15 +103,29 @@ async function getOwnInfo(req, res) {
 
 async function setDiseases(req, res) {
   const diseasesDto = Joi.array().required().items(Joi.string().required());
-  const { error } = Joi.object({ diseases: diseasesDto }).validate(req.body);
+  const { error } = Joi.object({
+    diseases: diseasesDto,
+    height: Joi.number().max(10).message('"profile.height" must be a number (meters)').optional(),
+    weight: Joi.number().min(0).optional(),
+  }).validate(req.body);
   if (error) return responseHandler.badRequest(res, error.details[0]?.message);
 
   try {
-    const { diseases: newDiseases } = req.body;
+    const { diseases: newDiseases, weight, height } = req.body;
     const { email } = req.user;
 
     const existingUser = await db.User.findOne({ where: { email } });
     if (!existingUser) return responseHandler.notFound(res, `User "${email}" has not logged in.`);
+
+    if (weight || height) {
+      const [updatedCount] = await db.Profile.update(
+        { weight, height },
+        { where: { userId: existingUser.id } },
+      );
+      if (!updatedCount) {
+        return responseHandler.badRequest(res, `Update profile's user "${email}" failed`);
+      }
+    }
 
     const existingDiseases = await db.Disease.findAll({
       where: { userId: existingUser.id },
@@ -146,7 +160,7 @@ async function setAvatar(req, res) {
     const user = await db.User.findOne({ where: { email } });
     if (!user) return responseHandler.notFound(res, `User ${email} not found`);
 
-    const { filename, publicUrl } = await storageService.uploadFile(req.file, 'avatars');
+    const { filename, publicUrl } = await storageService.uploadFile(req.file, 'avatars', email);
     if (user.avatarKey) {
       await storageService.deleteFile(user.avatarKey);
     }

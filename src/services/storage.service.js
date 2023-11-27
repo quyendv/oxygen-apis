@@ -4,13 +4,16 @@ import { getDownloadURL } from 'firebase-admin/storage';
 /**
  * @param {Multer.File} fileData
  * @param {string} folder
+ * @param {string | undefined} email for custom filename
  * @returns {Promise<{filename: string, publicUrl: string}>}
  */
-async function uploadFile(fileData, folder) {
+async function uploadFile(fileData, folder, email) {
   if (!fileData || !folder) throw new Error('File and folder must be provided');
 
   const bucket = admin.storage().bucket();
-  const filename = `${folder}/${Date.now()}-${fileData.originalname.trim().replace(/\s/g, '_')}`;
+  const filename = `${folder}/${
+    email ? email.split('@')[0] + '-' : ''
+  }${Date.now()}-${fileData.originalname.trim().replace(/\s/g, '_')}`;
 
   const blob = bucket.file(filename);
   const blobStream = blob.createWriteStream({ contentType: fileData.mimetype });
