@@ -8,7 +8,7 @@ module.exports = {
     host: process.env.DB_HOST,
     dialect: 'postgres',
 
-    // logging: false,
+    logging: false,
     timezone: '+07:00',
   },
   // test: {

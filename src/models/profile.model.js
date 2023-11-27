@@ -16,12 +16,12 @@ module.exports = (sequelize, DataTypes) => {
     {
       userId: DataTypes.INTEGER,
       sex: DataTypes.BOOLEAN,
-      dateOfBirth: DataTypes.DATEONLY,
+      dateOfBirth: DataTypes.INTEGER,
       country: DataTypes.STRING,
       province: DataTypes.STRING,
       district: DataTypes.STRING,
       ward: DataTypes.STRING,
-      address: DataTypes.STRING,
+      address: DataTypes.STRING, // home,street,...
       height: DataTypes.DOUBLE, // m
       weight: DataTypes.DOUBLE, // kg
     },
