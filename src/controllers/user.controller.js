@@ -160,7 +160,7 @@ async function setAvatar(req, res) {
     const user = await db.User.findOne({ where: { email } });
     if (!user) return responseHandler.notFound(res, `User ${email} not found`);
 
-    const { filename, publicUrl } = await storageService.uploadFile(req.file, 'avatars');
+    const { filename, publicUrl } = await storageService.uploadFile(req.file, 'avatars', email);
     if (user.avatarKey) {
       await storageService.deleteFile(user.avatarKey);
     }
