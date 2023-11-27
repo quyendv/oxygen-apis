@@ -107,11 +107,14 @@ async function setDiseases(req, res) {
   if (error) return responseHandler.badRequest(res, error.details[0]?.message);
 
   try {
-    const user = req.user;
     const { diseases: newDiseases } = req.body;
+    const { email } = req.user;
+
+    const existingUser = await db.User.findOne({ where: { email } });
+    if (!existingUser) return responseHandler.notFound(res, `User "${email}" has not logged in.`);
 
     const existingDiseases = await db.Disease.findAll({
-      where: { userId: user.id },
+      where: { userId: existingUser.id },
       attributes: ['name'],
     }); // { name: string }[]
 
@@ -119,14 +122,16 @@ async function setDiseases(req, res) {
     const toAdd = newDiseases.filter((d) => !existingDiseases.some((cd) => cd.name === d));
 
     if (toDelete.length > 0) {
-      await db.Disease.destroy({ where: { name: toDelete.map((d) => d.name), userId: user.id } });
+      await db.Disease.destroy({
+        where: { name: toDelete.map((d) => d.name), userId: existingUser.id },
+      });
     }
 
     if (toAdd.length > 0) {
-      await db.Disease.bulkCreate(toAdd.map((name) => ({ name, userId: user.id })));
+      await db.Disease.bulkCreate(toAdd.map((name) => ({ name, userId: existingUser.id })));
     }
 
-    const newData = await db.Disease.findAll({ userId: user.id });
+    const newData = await db.Disease.findAll({ userId: existingUser.id });
     return responseHandler.created(res, newData);
   } catch (error) {
     return responseHandler.internalServerError(res, error.message);
