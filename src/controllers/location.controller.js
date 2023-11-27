@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { Op } from 'sequelize';
 import responseHandler from '../configs/response.config';
 import { getTimeRange, getTimeRangeByDate } from '../helpers/common.helper';
 import db from '../models';
@@ -97,7 +98,7 @@ async function addLocationHistory(req, res) {
     lat: Joi.number().required(),
     long: Joi.number().required(),
     aqi: Joi.number().integer().required(),
-    time: Joi.number().integer().min(0).required(),
+    time: Joi.number().integer().min(0).required(), // epoch time
   }).required();
   const { error } = dto.validate(req.body);
   if (error) return responseHandler.badRequest(res, error.details[0]?.message);
@@ -105,16 +106,33 @@ async function addLocationHistory(req, res) {
   try {
     // TODO: check timestamp < now
     const { email } = req.user;
+    const { time } = req.body;
     const existingUser = await db.User.findOne({ where: { email } });
     if (!existingUser) return responseHandler.notFound(res, `User "${email}" has not logged in.`);
 
-    const location = await db.LocationHistory.create({
+    // handle only one location record per hour
+    const newLocationDate = new Date(time * 1000),
+      hourDate = new Date(time * 1000);
+    hourDate.setMinutes(0);
+    hourDate.setSeconds(0);
+
+    const hourlyLocations = await db.LocationHistory.findAll({
+      where: { userId: existingUser.id, timestamp: { [Op.between]: [hourDate, newLocationDate] } },
+    });
+
+    if (hourlyLocations.length > 0) {
+      console.warn('Include location in this hour');
+      await Promise.all(hourlyLocations.map((l) => l.destroy()));
+    }
+
+    const newLocation = await db.LocationHistory.create({
       userId: existingUser.id,
       ...req.body,
-      epoch: req.body.time,
-      timestamp: new Date(req.body.time * 1000),
+      epoch: time,
+      timestamp: newLocationDate,
     });
-    return responseHandler.created(res, location);
+
+    return responseHandler.created(res, newLocation);
   } catch (error) {
     return responseHandler.internalServerError(res, error.message);
   }
