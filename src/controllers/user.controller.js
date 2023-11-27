@@ -15,7 +15,7 @@ async function createUser(req, res) {
 
     return responseHandler.created(res, user);
   } catch (error) {
-    return responseHandler.internalServerError(res);
+    return responseHandler.internalServerError(res, error.message);
   }
 }
 
