@@ -3,7 +3,7 @@ name: Auto deploy
 on:
   push:
     branches:
-      - test_ci
+      - master
 
 jobs:
   deploy:
@@ -21,3 +21,6 @@ jobs:
           script: | # run with multiple script
             cd /oxygen-docker/oxygen-apis
             git fetch origin
+            git checkout develop
+            git reset --hard origin/develop
+            echo ${{ secrets.SSH_PASSPHRASE }} | sudo systemctl restart oxygen-web
