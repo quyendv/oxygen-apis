@@ -14,8 +14,9 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }} #hostname of server
-          username: oxygen #username login to server
           key: ${{ secrets.SSH_PRIVATE_KEY }} #password login to server
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          username: oxygen #username login to server
           port: 22
           script: | # run with multiple script
             cd /oxygen-docker/oxygen-apis
