@@ -22,6 +22,8 @@ async function get7dAqi(lat, lon) {
   const res = await import('node-fetch').then(({ default: fetch }) => fetch(requestAqiUrl));
 
   const arr = {};
+  let timeOffset = Number(process.env.AQI_TIME_OFFSET) || 7;
+
   if (res.status == 200) {
     const html = await res.text();
     const $ = cheerio.load(html);
@@ -39,10 +41,10 @@ async function get7dAqi(lat, lon) {
         if (date != 'Today') {
           epoch =
             new Date(date.split(',')[1].trim() + ' ' + current.getFullYear()).getTime() / 1000 +
-            7 * 60 * 60;
+            timeOffset * 60 * 60;
         } else {
           current.setHours(0, 0, 0, 0);
-          epoch = current.getTime() / 1000 + 7 * 60 * 60;
+          epoch = current.getTime() / 1000 + timeOffset * 60 * 60;
         }
 
         const aqius = $(el).find('.pollutant-level-wrapper').find('b').text();

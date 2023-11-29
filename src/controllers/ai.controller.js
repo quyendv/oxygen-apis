@@ -1,4 +1,4 @@
-function analyzeDisease(req, res, next) {
+async function analyzeDisease(req, res, next) {
   let disease = req.query.disease;
   if (!disease || disease == '') {
     return res.status(400).json({
@@ -6,14 +6,20 @@ function analyzeDisease(req, res, next) {
     });
   }
 
+  let BASE_URL = process.env.AI_BASE_URL;
+
+  const aiResult = await apisCall('POST', `${BASE_URL}/model/analyze-disease`, {
+    description: disease,
+  });
+
   let result = {
-    analysis: ['covid', 'aids'],
+    analysis: /*aiResult.result*/ 'You are cute',
   };
 
   return res.status(200).json(result);
 }
 
-function shortSuggestion(req, res, next) {
+async function shortSuggestion(req, res, next) {
   let aqi = req.query.aqi;
   let co = req.query.co;
   let no2 = req.query.no2;
@@ -64,12 +70,19 @@ function shortSuggestion(req, res, next) {
     });
   }
 
+  let BASE_URL = process.env.AI_BASE_URL;
+
+  const aiResult = await apisCall('POST', `${BASE_URL}/model/advice/short`, {
+    aqi: aqi,
+  });
+
   return res.status(200).json({
-    suggestion: `With these disgusting air quality ${aqi}, you should love yourself now`,
+    suggestion:
+      /*`With these disgusting air quality ${aqi}, you should love yourself now`,*/ aiResult.advice,
   });
 }
 
-function longSuggestions(req, res, next) {
+async function longSuggestions(req, res, next) {
   let aqi = req.query.aqi;
   let co = req.query.co;
   let no2 = req.query.no2;
@@ -131,8 +144,15 @@ function longSuggestions(req, res, next) {
     .split(',')
     .map((illness) => `Having this disease ${illness}, you should love yourself now`);
 
+  let BASE_URL = process.env.AI_BASE_URL;
+
+  const aiResult = await apisCall('POST', `${BASE_URL}/model/advice/long`, {
+    aqi: aqi,
+    illness: illnessList,
+  });
+
   return res.status(200).json({
-    suggestions: suggestionList,
+    suggestions: /*suggestionList*/ aiResult.advices,
   });
 }
 

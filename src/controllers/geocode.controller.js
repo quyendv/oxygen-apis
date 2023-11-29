@@ -39,7 +39,7 @@ async function reverseGeocode(req, res, next) {
     lon: result.features[0].properties.lon,
   };
   finalResult[finalResult.result_type] = finalResult['result_type'];
-  return res.status(200).json(result);
+  return res.status(200).json(finalResult);
 }
 async function getRelatedLocation(req, res, next) {
   const text = req.query.text.trim();
