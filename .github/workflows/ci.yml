@@ -1,0 +1,22 @@
+name: Auto deploy
+
+on:
+  push:
+    branches:
+      - test_ci
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: executing remote ssh commands using password
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }} #hostname of server
+          username: oxygen #username login to server
+          key: ${{ secrets.SSH_PRIVATE_KEY }} #password login to server
+          port: 22
+          script: | # run with multiple script
+            cd /oxygen-docker/oxygen-apis
+            git fetch origin
