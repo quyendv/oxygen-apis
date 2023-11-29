@@ -21,6 +21,5 @@ jobs:
           script: | # run with multiple script
             cd /oxygen-docker/oxygen-apis
             git fetch origin
-            git checkout develop
-            git reset --hard origin/develop
-            echo ${{ secrets.SSH_PASSPHRASE }} | sudo systemctl restart oxygen-web
+            git checkout origin/develop
+            echo ${{ secrets.SSH_PASSPHRASE }} | sudo -S systemctl restart oxygen-web
