@@ -1,3 +1,5 @@
+import apisCall from '../helpers/apis';
+
 async function analyzeDisease(req, res, next) {
   let disease = req.query.disease;
   if (!disease || disease == '') {
@@ -8,12 +10,18 @@ async function analyzeDisease(req, res, next) {
 
   let BASE_URL = process.env.AI_BASE_URL;
 
-  const aiResult = await apisCall('POST', `${BASE_URL}/model/analyze-disease`, {
+  const aiResult = await apisCall('POST', `${BASE_URL}/predict/disease`, {
     description: disease,
   });
 
+  if (!aiResult) {
+    return res.status(400).json({
+      message: 'Invalid Argument',
+    });
+  }
+
   let result = {
-    analysis: /*aiResult.result*/ 'You are cute',
+    analysis: aiResult.diseases ?? ['No idea'],
   };
 
   return res.status(200).json(result);
@@ -72,13 +80,17 @@ async function shortSuggestion(req, res, next) {
 
   let BASE_URL = process.env.AI_BASE_URL;
 
-  const aiResult = await apisCall('POST', `${BASE_URL}/model/advice/short`, {
+  const aiResult = await apisCall('POST', `${BASE_URL}/day/advice`, {
     aqi: aqi,
+    no2: no2,
+    o3: o3,
+    so2: so2,
+    pm2_5: pm2_5,
+    pm10: pm10,
   });
 
   return res.status(200).json({
-    suggestion:
-      /*`With these disgusting air quality ${aqi}, you should love yourself now`,*/ aiResult.advice,
+    suggestion: aiResult.advice,
   });
 }
 
@@ -134,25 +146,21 @@ async function longSuggestions(req, res, next) {
   }
 
   let illnessList = req.query.illness;
-  if (!illnessList || illnessList == '') {
-    return res.status(400).json({
-      message: 'Invalid Argument',
-    });
-  }
-
-  let suggestionList = illnessList
-    .split(',')
-    .map((illness) => `Having this disease ${illness}, you should love yourself now`);
 
   let BASE_URL = process.env.AI_BASE_URL;
 
-  const aiResult = await apisCall('POST', `${BASE_URL}/model/advice/long`, {
+  const aiResult = await apisCall('POST', `${BASE_URL}/personal/advice`, {
     aqi: aqi,
-    illness: illnessList,
+    no2: no2,
+    o3: o3,
+    so2: so2,
+    pm2_5: pm2_5,
+    pm10: pm10,
+    description: !illnessList || illnessList == '' ? 'none' : illnessList,
   });
 
   return res.status(200).json({
-    suggestions: /*suggestionList*/ aiResult.advices,
+    suggestions: aiResult.advices,
   });
 }
 
