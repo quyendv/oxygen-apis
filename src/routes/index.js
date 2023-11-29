@@ -4,6 +4,7 @@ import locationRouter from './location.route.js';
 import userRouter from './user.route.js';
 import weatherRouter from './weather.route.js';
 import locationListRouter from './locationlist.route.js';
+import aiRouter from './ai.route.js';
 
 const initRoutes = (app) => {
   // app.use(path, otherRouter)
@@ -14,6 +15,7 @@ const initRoutes = (app) => {
 
   app.use('/api/v1/locationlist', locationListRouter);
   app.use('/api/v1/locations', locationRouter);
+  app.use('/api/v1/ai', aiRouter);
 
   app.use('/', (req, res) => {
     res.send('Server on root route. Path not found!');
