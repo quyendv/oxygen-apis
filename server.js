@@ -29,6 +29,6 @@ app.use(express.urlencoded({ extended: true }));
 initRoutes(app);
 
 /** Run */
-app.listen(PORT, () => {
+module.exports = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

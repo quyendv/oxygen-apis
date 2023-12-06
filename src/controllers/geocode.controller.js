@@ -42,6 +42,11 @@ async function reverseGeocode(req, res, next) {
   return res.status(200).json(finalResult);
 }
 async function getRelatedLocation(req, res, next) {
+  if (!req.query.text) {
+    return res.status(400).json({
+      message: 'Invalid Argument',
+    });
+  }
   const text = req.query.text.trim();
   if (text == '') {
     return res.status(400).json({
