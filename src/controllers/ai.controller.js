@@ -1,5 +1,18 @@
 import apisCall from '../helpers/apis';
 
+function setAiUrl(req, res, next) {
+  if (req.query.url == '' || !req.query.url) {
+    return res.status(400).json({
+      message: 'Invalid Argument',
+    });
+  }
+
+  process.env.AI_BASE_URL = req.query.url;
+  return res.status(200).json({
+    message: 'Success',
+  });
+}
+
 async function analyzeDisease(req, res, next) {
   let disease = req.query.disease;
   if (!disease || disease == '') {
@@ -9,6 +22,7 @@ async function analyzeDisease(req, res, next) {
   }
 
   let BASE_URL = process.env.AI_BASE_URL;
+  console.log(BASE_URL);
 
   const aiResult = await apisCall('POST', `${BASE_URL}/predict/disease`, {
     description: disease,
@@ -164,4 +178,4 @@ async function longSuggestions(req, res, next) {
   });
 }
 
-export default { analyzeDisease, shortSuggestion, longSuggestions };
+export default { analyzeDisease, shortSuggestion, longSuggestions, setAiUrl };
